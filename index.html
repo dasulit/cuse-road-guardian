@@ -10,27 +10,43 @@
     <style>
     #map {
         position: absolute;
-        width: 100%;
+        width: 80%;
+        height: 100%;
+        top: 0;
+        left: 25%;
+    }
+    section {
+        box-sizing: border-box;
+        position: absolute;
+        width: 25%;
         height: 100%;
         top: 0;
         left: 0;
+        padding: 2em;
+        background: #222;
+        color: #fff;
+        z-index: 999;
     }
     </style>
 </head>
 
 <body>
+    <section>
+    <h2>Potholes filled in the city of Syracuse</h2>
+    </section>
+
     <div id='map'></div>
     <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZGFzdWxpdCIsImEiOiJjaXQzYmFjYmkwdWQ5MnBwZzEzZnNub2hhIn0.EDJ-lIfX2FnKhPw3nqHcqg';
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYWprcmFwZiIsImEiOiJjaXJwcGJpeWUwZ2pkZmZtNmEwdGdxZThvIn0.m_2YcMAEFRDIQbYdluZKgQ';
 
+    // Initializes the map and some initial display options
     var map = new mapboxgl.Map({
         container: "map",
-        style: 'mapbox://styles/dasulit/ciu1mdn5700ai2ilfgr51zp7f',
-        center: [-76.1474, 43.0481],
-        zoom: 12,
-        minZoom: 12,
-        maxZoom: 16,
-        pitch: 60,
+        style: 'mapbox://styles/ajkrapf/ciu3d3goo00bl2inzmusryo3f',
+        center: [-76.1374, 43.0310],
+        zoom: 11.5,
+        minZoom: 11.5,
+        maxZoom: 16
     });
     
     </script>
