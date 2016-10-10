@@ -7,14 +7,35 @@
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.25.1/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.25.1/mapbox-gl.css' rel='stylesheet' />
+    <link href="https://fonts.googleapis.com/css?family=Poppins:500,700" rel="stylesheet">
     <style>
+    body, button {
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    h2 {
+        font-size: 2em;
+        font-weight: 700;
+        line-height: 1.2;
+        text-transform: uppercase;
+        color: rgb(128, 196, 255);
+    }
+    
+    h3 {
+        text-transform: uppercase;
+        font-size: 1.2em;
+        color: rgb(128, 196, 255);
+        margin: 2em 0 .2em;
+    }
+    
     #map {
         position: absolute;
-        width: 80%;
+        width: 75%;
         height: 100%;
         top: 0;
         left: 25%;
     }
+    
     section {
         box-sizing: border-box;
         position: absolute;
@@ -27,28 +48,145 @@
         color: #fff;
         z-index: 999;
     }
+
+    em {
+        color: rgb(252, 212, 100);
+        font-style: normal;
+    }
+
+    #coordinates {
+    	font-size: 0.8em;
+    }
+
+    button, button:hover {
+    	border-radius: 2px;
+    	background: rgb(252, 212, 100);
+    	border: none;
+    	text-transform: uppercase;
+    	margin-top: 2em;
+    	padding: .5em .8em;
+    	font-weight: 700;
+    	color: #222;
+    }
+    
+    .mapboxgl-ctrl.mapboxgl-ctrl-attrib {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .mapboxgl-ctrl.mapboxgl-ctrl-attrib a {
+        color: #fff;
+    }
     </style>
 </head>
 
 <body>
     <section>
-    <h2>Potholes filled in the city of Syracuse</h2>
+        <h2>Potholes filled in the city of Syracuse</h2>
+        <p>See where potholes have been filled since April 2016.</p>
+        <p>Want to report a pothole? Drag the <em>yellow</em> dot to a spot on the road in need of a fix.</p>
+        <span id='coordinates' class='coordinates'></span>
     </section>
-
     <div id='map'></div>
     <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiYWprcmFwZiIsImEiOiJjaXJwcGJpeWUwZ2pkZmZtNmEwdGdxZThvIn0.m_2YcMAEFRDIQbYdluZKgQ';
+
+    var syracuse = [-76.1374, 43.0310];
+    var isDragging;
+    var isCursorOverPoint;
+    var coordinates = document.getElementById('coordinates');
 
     // Initializes the map and some initial display options
     var map = new mapboxgl.Map({
         container: "map",
         style: 'mapbox://styles/ajkrapf/ciu3d3goo00bl2inzmusryo3f',
-        center: [-76.1374, 43.0310],
+        center: syracuse,
         zoom: 11.5,
         minZoom: 11.5,
         maxZoom: 16
     });
-    
+
+    var canvas = map.getCanvasContainer();
+    var marker = {
+        "type": "FeatureCollection",
+        "features": [{
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": syracuse
+            }
+        }]
+    };
+
+    function mouseDown() {
+        if (!isCursorOverPoint) return;
+        isDragging = true;
+        canvas.style.cursor = 'grab';
+        map.on('mousemove', onMove);
+        map.on('mouseup', onUp);
+    }
+
+    function onMove(e) {
+        if (!isDragging) return;
+        var coords = e.lngLat;
+
+        canvas.style.cursor = 'grabbing';
+
+        marker.features[0].geometry.coordinates = [coords.lng, coords.lat];
+        map.getSource('marker').setData(marker);
+    }
+
+    function onUp(e) {
+        if (!isDragging) return;
+        var coords = e.lngLat;
+
+        map.easeTo({
+            center: [coords.lng, coords.lat],
+            zoom: 14
+        });
+
+        coordinates.style.display = 'block';
+        coordinates.innerHTML = '<h3>Report a pothole at:</h3>Longitude: ' + coords.lng + '<br />Latitude: ' + coords.lat + '<button>Submit your report</button>';
+        canvas.style.cursor = '';
+        isDragging = false;
+    }
+
+    map.on('load', function() {
+
+        map.addSource('marker', {
+            "type": "geojson",
+            "data": marker
+        });
+
+        map.addLayer({
+            "id": "marker",
+            "type": "circle",
+            "source": "marker",
+            "paint": {
+                "circle-radius": 10,
+                "circle-color": "rgba(252,212,100,0.8)"
+            }
+        });
+
+        map.on('mousemove', function(e) {
+            var features = map.queryRenderedFeatures(e.point, {
+                layers: ['marker']
+            });
+
+            if (features.length) {
+                map.setPaintProperty('marker', 'circle-color', 'rgba(252,212,100,.7)');
+                canvas.style.cursor = 'move';
+                isCursorOverPoint = true;
+                map.dragPan.disable();
+            } else {
+                map.setPaintProperty('marker', 'circle-color', 'rgba(252,212,100,0.8)');
+                canvas.style.cursor = '';
+                isCursorOverPoint = false;
+                map.dragPan.enable();
+            }
+        });
+
+        map.on('mousedown', mouseDown, true);
+    });
     </script>
 </body>
 
